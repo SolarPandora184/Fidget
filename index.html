@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sanctuary Tap</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sanctuary Clear</title>
   <style>
     html, body {
       margin: 0;
@@ -37,54 +37,64 @@
     const ctx = canvas.getContext('2d');
     let width = canvas.width = window.innerWidth;
     let height = canvas.height = window.innerHeight;
-    const flowers = [];
+
+    const dots = [];
+    const totalDots = 80;
+
+    function createDots() {
+      dots.length = 0;
+      for (let i = 0; i < totalDots; i++) {
+        dots.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: 8 + Math.random() * 12,
+          hue: Math.random() * 360
+        });
+      }
+    }
 
     window.addEventListener('resize', () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+      createDots();
     });
 
     document.getElementById('reset').addEventListener('click', () => {
-      flowers.length = 0;
+      createDots();
     });
 
     canvas.addEventListener('click', (e) => {
-      flowers.push({
-        x: e.clientX,
-        y: e.clientY,
-        size: 0,
-        maxSize: 12 + Math.random() * 10,
-        hue: Math.random() * 360
-      });
+      const x = e.clientX;
+      const y = e.clientY;
+      for (let i = dots.length - 1; i >= 0; i--) {
+        const d = dots[i];
+        const dx = x - d.x;
+        const dy = y - d.y;
+        if (dx * dx + dy * dy < d.size * d.size) {
+          dots.splice(i, 1);
+          break;
+        }
+      }
     });
 
-    function drawOrb(time) {
-      const radius = 30 + Math.sin(time / 500) * 5;
-      ctx.beginPath();
-      ctx.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
-      ctx.fillStyle = '#88ccee';
-      ctx.fill();
-    }
-
-    function drawFlowers() {
-      for (let flower of flowers) {
-        if (flower.size < flower.maxSize) flower.size += 0.3;
+    function drawDots() {
+      for (let d of dots) {
         ctx.beginPath();
-        ctx.arc(flower.x, flower.y, flower.size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsl(${flower.hue}, 70%, 60%)`;
+        ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsl(${d.hue}, 60%, 65%)`;
         ctx.fill();
       }
     }
 
-    function animate(time) {
+    function animate() {
       ctx.fillStyle = '#f0f8ff';
       ctx.fillRect(0, 0, width, height);
-      drawOrb(time);
-      drawFlowers();
+      drawDots();
       requestAnimationFrame(animate);
     }
 
-    animate(0);
+    createDots();
+    animate();
   </script>
 </body>
 </html>
