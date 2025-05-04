@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sanctuary Tap</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #f0f8ff;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+    canvas {
+      display: block;
+    }
+    #reset {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 6px 12px;
+      font-size: 14px;
+      background: #ffffffaa;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <button id="reset">Reset</button>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+    const flowers = [];
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      flowers.length = 0;
+    });
+
+    canvas.addEventListener('click', (e) => {
+      flowers.push({
+        x: e.clientX,
+        y: e.clientY,
+        size: 0,
+        maxSize: 12 + Math.random() * 10,
+        hue: Math.random() * 360
+      });
+    });
+
+    function drawOrb(time) {
+      const radius = 30 + Math.sin(time / 500) * 5;
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#88ccee';
+      ctx.fill();
+    }
+
+    function drawFlowers() {
+      for (let flower of flowers) {
+        if (flower.size < flower.maxSize) flower.size += 0.3;
+        ctx.beginPath();
+        ctx.arc(flower.x, flower.y, flower.size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsl(${flower.hue}, 70%, 60%)`;
+        ctx.fill();
+      }
+    }
+
+    function animate(time) {
+      ctx.fillStyle = '#f0f8ff';
+      ctx.fillRect(0, 0, width, height);
+      drawOrb(time);
+      drawFlowers();
+      requestAnimationFrame(animate);
+    }
+
+    animate(0);
+  </script>
+</body>
+</html>
