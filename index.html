@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dot Fidget Tracker</title>
+  <title>Red Dot Fidget</title>
   <style>
     html, body {
       margin: 0;
@@ -27,17 +27,20 @@
     canvas.width = width;
     canvas.height = height;
 
-    const dotRadius = 36; // even bigger dots!
+    const dotRadius = 36; // big red dots
+    const trailRadius = dotRadius * 2; // double-size trail
+
     let dots = [];
     let trail = [];
     let pointer = null;
+    let initialDotSpawned = false;
 
     function createDot(x = Math.random() * width, y = Math.random() * height) {
-      dots.push({ x, y, life: 0 });
+      dots.push({ x, y });
     }
 
     function drawDots() {
-      ctx.fillStyle = '#4e54c8';
+      ctx.fillStyle = '#e63946'; // red
       dots.forEach(dot => {
         ctx.beginPath();
         ctx.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
@@ -45,65 +48,55 @@
       });
     }
 
-    function updateDots() {
-      dots.forEach(dot => {
-        dot.life += 1;
-        // Multiply slowly
-        if (dot.life % 600 === 0 && dots.length < 200) {
-          const count = Math.random() > 0.5 ? 2 : 1;
-          for (let i = 0; i < count; i++) {
-            const offsetX = (Math.random() - 0.5) * 60;
-            const offsetY = (Math.random() - 0.5) * 60;
-            createDot(dot.x + offsetX, dot.y + offsetY);
-          }
-        }
-      });
-    }
-
     function drawTrail() {
-      for (let i = 0; i < trail.length; i++) {
-        const point = trail[i];
+      trail.forEach(point => {
         ctx.beginPath();
-        ctx.fillStyle = `rgba(78, 84, 200, ${point.alpha})`;
-        ctx.arc(point.x, point.y, 14, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(230, 57, 70, ${point.alpha})`; // semi-transparent red
+        ctx.arc(point.x, point.y, trailRadius, 0, Math.PI * 2);
         ctx.fill();
         point.alpha -= 0.02;
-      }
+      });
       trail = trail.filter(p => p.alpha > 0);
     }
 
     function drawPointer() {
       if (pointer) {
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(78, 84, 200, 0.8)';
+        ctx.strokeStyle = 'rgba(230, 57, 70, 0.8)';
         ctx.lineWidth = 3;
         ctx.arc(pointer.x, pointer.y, 25, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
 
+    function clearDotsOnTouch(x, y) {
+      const cleared = [];
+      dots = dots.filter(dot => {
+        const dx = dot.x - x;
+        const dy = dot.y - y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance <= dotRadius * 1.5) {
+          cleared.push(dot);
+          return false; // remove this dot
+        }
+        return true;
+      });
+
+      // For each cleared dot, spawn a new one
+      cleared.forEach(() => {
+        createDot();
+      });
+    }
+
     function gameLoop() {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
       ctx.fillRect(0, 0, width, height);
 
-      if (dots.length < 60 && Math.random() < 0.01) {
-        createDot();
-      }
-
-      updateDots();
       drawDots();
       drawTrail();
       drawPointer();
 
       requestAnimationFrame(gameLoop);
-    }
-
-    function clearDotsOnTouch(x, y) {
-      dots = dots.filter(dot => {
-        const dx = dot.x - x;
-        const dy = dot.y - y;
-        return Math.sqrt(dx * dx + dy * dy) > dotRadius * 1.5;
-      });
     }
 
     canvas.addEventListener('touchmove', (e) => {
@@ -128,6 +121,12 @@
       canvas.width = width;
       canvas.height = height;
     });
+
+    // Initial dot spawn
+    if (!initialDotSpawned) {
+      createDot();
+      initialDotSpawned = true;
+    }
 
     gameLoop();
   </script>
