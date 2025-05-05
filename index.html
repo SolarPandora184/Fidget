@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multiplying Dot Fidget</title>
+  <title>Trail Dot Fidget</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
       touch-action: none;
-      background-color: #fff;
+      background-color: #ffffff;
     }
     canvas {
       display: block;
@@ -27,15 +27,15 @@
     canvas.width = width;
     canvas.height = height;
 
-    const dotRadius = 10;
+    const dotRadius = 18; // bigger dots
     let dots = [];
+    let trail = [];
 
     function createDot(x = Math.random() * width, y = Math.random() * height) {
       dots.push({ x, y, life: 0 });
     }
 
     function drawDots() {
-      ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = '#4e54c8';
       dots.forEach(dot => {
         ctx.beginPath();
@@ -48,26 +48,44 @@
       dots.forEach(dot => {
         dot.life += 1;
 
-        // Multiply every few seconds if untouched
-        if (dot.life % 300 === 0 && dots.length < 300) {
-          // spawn 1 or 2 new nearby dots
+        // Multiply slowly if not cleared
+        if (dot.life % 360 === 0 && dots.length < 250) {
           const count = Math.random() > 0.5 ? 2 : 1;
           for (let i = 0; i < count; i++) {
-            const offsetX = (Math.random() - 0.5) * 40;
-            const offsetY = (Math.random() - 0.5) * 40;
+            const offsetX = (Math.random() - 0.5) * 50;
+            const offsetY = (Math.random() - 0.5) * 50;
             createDot(dot.x + offsetX, dot.y + offsetY);
           }
         }
       });
     }
 
+    function drawTrail() {
+      for (let i = 0; i < trail.length; i++) {
+        const point = trail[i];
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(78, 84, 200, ${point.alpha})`;
+        ctx.arc(point.x, point.y, 12, 0, Math.PI * 2);
+        ctx.fill();
+        point.alpha -= 0.02;
+      }
+      trail = trail.filter(p => p.alpha > 0);
+    }
+
     function gameLoop() {
-      if (dots.length < 150 && Math.random() < 0.15) {
+      // fade background slowly to create trail effect
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(0, 0, width, height);
+
+      // Occasionally spawn new dots
+      if (dots.length < 100 && Math.random() < 0.05) {
         createDot();
       }
 
       updateDots();
       drawDots();
+      drawTrail();
+
       requestAnimationFrame(gameLoop);
     }
 
@@ -83,7 +101,10 @@
       const touches = e.touches;
       for (let i = 0; i < touches.length; i++) {
         const touch = touches[i];
-        clearDotsOnTouch(touch.clientX, touch.clientY);
+        const x = touch.clientX;
+        const y = touch.clientY;
+        clearDotsOnTouch(x, y);
+        trail.push({ x, y, alpha: 0.6 }); // add trail point
       }
     }, { passive: false });
 
