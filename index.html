@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Red Dot Fidget</title>
+  <title>Red Dot Fidget - Night Mode</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
       touch-action: none;
-      background-color: #ffffff;
+      background-color: #111;
     }
     canvas {
       display: block;
@@ -27,8 +27,8 @@
     canvas.width = width;
     canvas.height = height;
 
-    const dotRadius = 36; // big red dots
-    const trailRadius = dotRadius * 2; // double-size trail
+    const dotRadius = 36;
+    const trailRadius = dotRadius * 2;
 
     let dots = [];
     let trail = [];
@@ -36,22 +36,35 @@
     let initialDotSpawned = false;
 
     function createDot(x = Math.random() * width, y = Math.random() * height) {
-      dots.push({ x, y });
+      dots.push({ x, y, shrinking: false, shrinkRadius: dotRadius });
     }
 
     function drawDots() {
       ctx.fillStyle = '#e63946'; // red
       dots.forEach(dot => {
+        const radius = dot.shrinking ? dot.shrinkRadius : dotRadius;
         ctx.beginPath();
-        ctx.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
+        ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
         ctx.fill();
       });
+    }
+
+    function updateDots() {
+      for (let i = dots.length - 1; i >= 0; i--) {
+        const dot = dots[i];
+        if (dot.shrinking) {
+          dot.shrinkRadius -= 2;
+          if (dot.shrinkRadius <= 0) {
+            dots.splice(i, 1);
+          }
+        }
+      }
     }
 
     function drawTrail() {
       trail.forEach(point => {
         ctx.beginPath();
-        ctx.fillStyle = `rgba(230, 57, 70, ${point.alpha})`; // semi-transparent red
+        ctx.fillStyle = `rgba(230, 57, 70, ${point.alpha})`;
         ctx.arc(point.x, point.y, trailRadius, 0, Math.PI * 2);
         ctx.fill();
         point.alpha -= 0.02;
@@ -70,28 +83,24 @@
     }
 
     function clearDotsOnTouch(x, y) {
-      const cleared = [];
-      dots = dots.filter(dot => {
-        const dx = dot.x - x;
-        const dy = dot.y - y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance <= dotRadius * 1.5) {
-          cleared.push(dot);
-          return false; // remove this dot
+      for (const dot of dots) {
+        if (!dot.shrinking) {
+          const dx = dot.x - x;
+          const dy = dot.y - y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance <= dotRadius * 1.5) {
+            dot.shrinking = true;
+            createDot(); // spawn new dot
+          }
         }
-        return true;
-      });
-
-      // For each cleared dot, spawn a new one
-      cleared.forEach(() => {
-        createDot();
-      });
+      }
     }
 
     function gameLoop() {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.fillStyle = 'rgba(17, 17, 17, 0.2)'; // dark fade layer
       ctx.fillRect(0, 0, width, height);
 
+      updateDots();
       drawDots();
       drawTrail();
       drawPointer();
@@ -132,3 +141,4 @@
   </script>
 </body>
 </html>
+
