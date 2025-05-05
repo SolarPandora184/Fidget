@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dot Clear Fidget</title>
+  <title>Multiplying Dot Fidget</title>
   <style>
     html, body {
       margin: 0;
@@ -27,13 +27,11 @@
     canvas.width = width;
     canvas.height = height;
 
-    let dots = [];
     const dotRadius = 10;
+    let dots = [];
 
-    function createDot() {
-      const x = Math.random() * width;
-      const y = Math.random() * height;
-      dots.push({ x, y });
+    function createDot(x = Math.random() * width, y = Math.random() * height) {
+      dots.push({ x, y, life: 0 });
     }
 
     function drawDots() {
@@ -46,12 +44,29 @@
       });
     }
 
-    function gameLoop() {
-      if (dots.length < 100) {
-        if (Math.random() < 0.2) {
-          createDot();
+    function updateDots() {
+      dots.forEach(dot => {
+        dot.life += 1;
+
+        // Multiply every few seconds if untouched
+        if (dot.life % 300 === 0 && dots.length < 300) {
+          // spawn 1 or 2 new nearby dots
+          const count = Math.random() > 0.5 ? 2 : 1;
+          for (let i = 0; i < count; i++) {
+            const offsetX = (Math.random() - 0.5) * 40;
+            const offsetY = (Math.random() - 0.5) * 40;
+            createDot(dot.x + offsetX, dot.y + offsetY);
+          }
         }
+      });
+    }
+
+    function gameLoop() {
+      if (dots.length < 150 && Math.random() < 0.15) {
+        createDot();
       }
+
+      updateDots();
       drawDots();
       requestAnimationFrame(gameLoop);
     }
