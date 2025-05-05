@@ -1,100 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sanctuary Clear</title>
+  <meta charset="UTF-8">
+  <title>Dot Clear Fidget</title>
   <style>
     html, body {
       margin: 0;
-      height: 100%;
-      background: #f0f8ff;
+      padding: 0;
       overflow: hidden;
-      touch-action: manipulation;
+      touch-action: none;
+      background-color: #fff;
     }
     canvas {
       display: block;
     }
-    #reset {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      padding: 6px 12px;
-      font-size: 14px;
-      background: #ffffffaa;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
-  <button id="reset">Reset</button>
+  <canvas id="fidgetCanvas"></canvas>
 
   <script>
-    const canvas = document.getElementById('canvas');
+    const canvas = document.getElementById('fidgetCanvas');
     const ctx = canvas.getContext('2d');
-    let width = canvas.width = window.innerWidth;
-    let height = canvas.height = window.innerHeight;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
 
-    const dots = [];
-    const totalDots = 80;
+    let dots = [];
+    const dotRadius = 10;
 
-    function createDots() {
-      dots.length = 0;
-      for (let i = 0; i < totalDots; i++) {
-        dots.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          size: 8 + Math.random() * 12,
-          hue: Math.random() * 360
-        });
-      }
+    function createDot() {
+      const x = Math.random() * width;
+      const y = Math.random() * height;
+      dots.push({ x, y });
     }
-
-    window.addEventListener('resize', () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      createDots();
-    });
-
-    document.getElementById('reset').addEventListener('click', () => {
-      createDots();
-    });
-
-    canvas.addEventListener('click', (e) => {
-      const x = e.clientX;
-      const y = e.clientY;
-      for (let i = dots.length - 1; i >= 0; i--) {
-        const d = dots[i];
-        const dx = x - d.x;
-        const dy = y - d.y;
-        if (dx * dx + dy * dy < d.size * d.size) {
-          dots.splice(i, 1);
-          break;
-        }
-      }
-    });
 
     function drawDots() {
-      for (let d of dots) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#4e54c8';
+      dots.forEach(dot => {
         ctx.beginPath();
-        ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsl(${d.hue}, 60%, 65%)`;
+        ctx.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
         ctx.fill();
+      });
+    }
+
+    function gameLoop() {
+      if (dots.length < 100) {
+        if (Math.random() < 0.2) {
+          createDot();
+        }
       }
-    }
-
-    function animate() {
-      ctx.fillStyle = '#f0f8ff';
-      ctx.fillRect(0, 0, width, height);
       drawDots();
-      requestAnimationFrame(animate);
+      requestAnimationFrame(gameLoop);
     }
 
-    createDots();
-    animate();
+    function clearDotsOnTouch(x, y) {
+      dots = dots.filter(dot => {
+        const dx = dot.x - x;
+        const dy = dot.y - y;
+        return Math.sqrt(dx * dx + dy * dy) > dotRadius * 1.5;
+      });
+    }
+
+    canvas.addEventListener('touchmove', (e) => {
+      const touches = e.touches;
+      for (let i = 0; i < touches.length; i++) {
+        const touch = touches[i];
+        clearDotsOnTouch(touch.clientX, touch.clientY);
+      }
+    }, { passive: false });
+
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
+
+    gameLoop();
   </script>
 </body>
 </html>
